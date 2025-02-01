@@ -50,8 +50,8 @@ def get_polarity(book_id):
 
 
 def get_or_generate_book_id_to_polarity():
-    if os.path.exists("book_id_to_polarity.pkl"):
-        book_id_to_polarity = load_pickle("book_id_to_polarity.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_polarity.pkl"):
+        book_id_to_polarity = load_pickle("data_dictionaries/book_id_to_polarity.pkl")
     else:
         book_id_to_polarity = {}
     return book_id_to_polarity
@@ -59,7 +59,7 @@ def get_or_generate_book_id_to_polarity():
 
 def main():
     book_id_to_polarity = get_or_generate_book_id_to_polarity()
-    book_id_to_year = load_pickle('book_id_to_year.pkl')
+    book_id_to_year = load_pickle('data_dictionaries/book_id_to_year.pkl')
     relevant_book_ids = [book_id for book_id, year in book_id_to_year.items() if year is not None and book_id not in book_id_to_polarity]
     total_tasks = len(relevant_book_ids)  # Total number of tasks for tqdm
     books_added = False
@@ -75,7 +75,7 @@ def main():
             except Exception as e:
                 print(f"Error processing book_id {book_id}: {e}")
     if books_added:
-        save_pickle(book_id_to_polarity, "book_id_to_polarity.pkl")
+        save_pickle(book_id_to_polarity, "data_dictionaries/book_id_to_polarity.pkl")
 
 
 if __name__ == '__main__':

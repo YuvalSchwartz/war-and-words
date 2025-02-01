@@ -96,9 +96,9 @@ def plot_sentiment_distribution(polarity_lists, ylim=None):
 
 
 def main():
-    book_id_to_year = {book_id: year for book_id, year in load_pickle('book_id_to_year.pkl').items() if year is not None and abs(year - 1914) <= 2025 - 1914}
+    book_id_to_year = {book_id: year for book_id, year in load_pickle('data_dictionaries/book_id_to_year.pkl').items() if year is not None and abs(year - 1914) <= 2025 - 1914}
     plot_year_distribution(book_id_to_year)
-    book_id_to_polarity = load_pickle('book_id_to_polarity.pkl')
+    book_id_to_polarity = load_pickle('data_dictionaries/book_id_to_polarity.pkl')
 
     # Plot polarity distribution
     plot_polarity_distribution(book_id_to_year, book_id_to_polarity)

@@ -4,4 +4,6 @@ python-dotenv
 requests
 scipy
 selenium
+textblob
+tqdm
 webdriver_manager

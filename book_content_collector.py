@@ -7,8 +7,8 @@ from utils import load_pickle, save_pickle
 
 
 def get_or_generate_book_id_to_path(book_id_to_type, book_id_to_language):
-    if os.path.exists("book_id_to_path.pkl"):
-        book_id_to_path = load_pickle("book_id_to_path.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_path.pkl"):
+        book_id_to_path = load_pickle("data_dictionaries/book_id_to_path.pkl")
     else:
         book_ids_to_exclude = set()
         book_id_to_path = {}
@@ -27,7 +27,7 @@ def get_or_generate_book_id_to_path(book_id_to_type, book_id_to_language):
                             del book_id_to_path[book_id]
                         elif book_id not in book_ids_to_exclude:
                             book_id_to_path[book_id] = os.path.join(root, file)
-        save_pickle(book_id_to_path, "book_id_to_path.pkl")
+        save_pickle(book_id_to_path, "data_dictionaries/book_id_to_path.pkl")
     return book_id_to_path
 
 
@@ -56,45 +56,45 @@ def get_book_ids_to_download(book_id_to_type, book_id_to_language, existing_book
 
 
 def delete_book(book_id):
-    book_id_to_type = load_pickle("book_id_to_type.pkl")
+    book_id_to_type = load_pickle("data_dictionaries/book_id_to_type.pkl")
     if book_id in book_id_to_type:
         del book_id_to_type[book_id]
-        save_pickle(book_id_to_type, "book_id_to_type.pkl")
+        save_pickle(book_id_to_type, "data_dictionaries/book_id_to_type.pkl")
 
-    book_id_to_language = load_pickle("book_id_to_language.pkl")
+    book_id_to_language = load_pickle("data_dictionaries/book_id_to_language.pkl")
     if book_id in book_id_to_language:
         del book_id_to_language[book_id]
-        save_pickle(book_id_to_language, "book_id_to_language.pkl")
+        save_pickle(book_id_to_language, "data_dictionaries/book_id_to_language.pkl")
 
-    book_id_to_name = load_pickle("book_id_to_name.pkl")
+    book_id_to_name = load_pickle("data_dictionaries/book_id_to_name.pkl")
     if book_id in book_id_to_name:
         del book_id_to_name[book_id]
-        save_pickle(book_id_to_name, "book_id_to_name.pkl")
+        save_pickle(book_id_to_name, "data_dictionaries/book_id_to_name.pkl")
 
-    book_id_to_author = load_pickle("book_id_to_author.pkl")
+    book_id_to_author = load_pickle("data_dictionaries/book_id_to_author.pkl")
     if book_id in book_id_to_author:
         del book_id_to_author[book_id]
-        save_pickle(book_id_to_author, "book_id_to_author.pkl")
+        save_pickle(book_id_to_author, "data_dictionaries/book_id_to_author.pkl")
 
-    book_id_to_year = load_pickle("book_id_to_year.pkl")
+    book_id_to_year = load_pickle("data_dictionaries/book_id_to_year.pkl")
     if book_id in book_id_to_year:
         del book_id_to_year[book_id]
-        save_pickle(book_id_to_year, "book_id_to_year.pkl")
+        save_pickle(book_id_to_year, "data_dictionaries/book_id_to_year.pkl")
 
-    book_id_to_lccn = load_pickle("book_id_to_lccn.pkl")
+    book_id_to_lccn = load_pickle("data_dictionaries/book_id_to_lccn.pkl")
     if book_id in book_id_to_lccn:
         del book_id_to_lccn[book_id]
-        save_pickle(book_id_to_lccn, "book_id_to_lccn.pkl")
+        save_pickle(book_id_to_lccn, "data_dictionaries/book_id_to_lccn.pkl")
 
-    book_id_to_wikipedia_url = load_pickle("book_id_to_wikipedia_url.pkl")
+    book_id_to_wikipedia_url = load_pickle("data_dictionaries/book_id_to_wikipedia_url.pkl")
     if book_id in book_id_to_wikipedia_url:
         del book_id_to_wikipedia_url[book_id]
-        save_pickle(book_id_to_wikipedia_url, "book_id_to_wikipedia_url.pkl")
+        save_pickle(book_id_to_wikipedia_url, "data_dictionaries/book_id_to_wikipedia_url.pkl")
 
-    book_id_to_path = load_pickle("book_id_to_path.pkl")
+    book_id_to_path = load_pickle("data_dictionaries/book_id_to_path.pkl")
     if book_id in book_id_to_path:
         del book_id_to_path[book_id]
-        save_pickle(book_id_to_path, "book_id_to_path.pkl")
+        save_pickle(book_id_to_path, "data_dictionaries/book_id_to_path.pkl")
 
 
 def download_books(book_ids_to_download):

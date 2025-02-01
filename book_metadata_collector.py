@@ -23,8 +23,8 @@ from utils import load_pickle, save_pickle
 
 # Data source: https://www.gutenberg.org/cache/epub/feeds/
 def get_or_generate_book_id_to_type():
-    if os.path.exists("book_id_to_type.pkl"):
-        book_id_to_type = load_pickle("book_id_to_type.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_type.pkl"):
+        book_id_to_type = load_pickle("data_dictionaries/book_id_to_type.pkl")
     else:
         # Initialize an empty dictionary
         book_id_to_type = {}
@@ -37,15 +37,15 @@ def get_or_generate_book_id_to_type():
                 book_id_to_type[int(row['Text#'])] = row['Type']
 
         # Save the dictionary to a pickle file
-        save_pickle(book_id_to_type, "book_id_to_type.pkl")
+        save_pickle(book_id_to_type, "data_dictionaries/book_id_to_type.pkl")
 
     return book_id_to_type
 
 
 # Data source: https://www.gutenberg.org/cache/epub/feeds/
 def get_or_generate_book_id_to_language():
-    if os.path.exists("book_id_to_language.pkl"):
-        book_id_to_language = load_pickle("book_id_to_language.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_language.pkl"):
+        book_id_to_language = load_pickle("data_dictionaries/book_id_to_language.pkl")
     else:
         # Initialize an empty dictionary
         book_id_to_language = {}
@@ -58,46 +58,46 @@ def get_or_generate_book_id_to_language():
                 book_id_to_language[int(row['Text#'])] = row['Language']
 
         # Save the dictionary to a pickle file
-        save_pickle(book_id_to_language, "book_id_to_language.pkl")
+        save_pickle(book_id_to_language, "data_dictionaries/book_id_to_language.pkl")
 
     return book_id_to_language
 
 
 def get_or_generate_book_id_to_name():
-    if os.path.exists("book_id_to_name.pkl"):
-        book_id_to_name = load_pickle("book_id_to_name.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_name.pkl"):
+        book_id_to_name = load_pickle("data_dictionaries/book_id_to_name.pkl")
     else:
         book_id_to_name = {}
     return book_id_to_name
 
 
 def get_or_generate_book_id_to_author():
-    if os.path.exists("book_id_to_author.pkl"):
-        book_id_to_author = load_pickle("book_id_to_author.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_author.pkl"):
+        book_id_to_author = load_pickle("data_dictionaries/book_id_to_author.pkl")
     else:
         book_id_to_author = {}
     return book_id_to_author
 
 
 def get_or_generate_book_id_to_wikipedia_url():
-    if os.path.exists("book_id_to_wikipedia_url.pkl"):
-        book_id_to_wikipedia_url = load_pickle("book_id_to_wikipedia_url.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_wikipedia_url.pkl"):
+        book_id_to_wikipedia_url = load_pickle("data_dictionaries/book_id_to_wikipedia_url.pkl")
     else:
         book_id_to_wikipedia_url = {}
     return book_id_to_wikipedia_url
 
 
 def get_or_generate_book_id_to_lccn():
-    if os.path.exists("book_id_to_lccn.pkl"):
-        book_id_to_lccn = load_pickle("book_id_to_lccn.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_lccn.pkl"):
+        book_id_to_lccn = load_pickle("data_dictionaries/book_id_to_lccn.pkl")
     else:
         book_id_to_lccn = {}
     return book_id_to_lccn
 
 
 def get_or_generate_book_id_to_year():
-    if os.path.exists("book_id_to_year.pkl"):
-        book_id_to_year = load_pickle("book_id_to_year.pkl")
+    if os.path.exists("data_dictionaries/book_id_to_year.pkl"):
+        book_id_to_year = load_pickle("data_dictionaries/book_id_to_year.pkl")
     else:
         book_id_to_year = {}
     return book_id_to_year
@@ -360,20 +360,20 @@ def main():
                 # Save progress every 10 books
                 if processed_count % 10 == 0:
                     with lock:
-                        save_pickle(book_id_to_name, "book_id_to_name.pkl")
-                        save_pickle(book_id_to_author, "book_id_to_author.pkl")
-                        save_pickle(book_id_to_wikipedia_url, "book_id_to_wikipedia_url.pkl")
-                        save_pickle(book_id_to_lccn, "book_id_to_lccn.pkl")
-                        save_pickle(book_id_to_year, "book_id_to_year.pkl")
+                        save_pickle(book_id_to_name, "data_dictionaries/book_id_to_name.pkl")
+                        save_pickle(book_id_to_author, "data_dictionaries/book_id_to_author.pkl")
+                        save_pickle(book_id_to_wikipedia_url, "data_dictionaries/book_id_to_wikipedia_url.pkl")
+                        save_pickle(book_id_to_lccn, "data_dictionaries/book_id_to_lccn.pkl")
+                        save_pickle(book_id_to_year, "data_dictionaries/book_id_to_year.pkl")
                         print(f"Saved progress for {processed_count} books.")
 
     # Final save
     with lock:
-        save_pickle(book_id_to_name, "book_id_to_name.pkl")
-        save_pickle(book_id_to_author, "book_id_to_author.pkl")
-        save_pickle(book_id_to_wikipedia_url, "book_id_to_wikipedia_url.pkl")
-        save_pickle(book_id_to_lccn, "book_id_to_lccn.pkl")
-        save_pickle(book_id_to_year, "book_id_to_year.pkl")
+        save_pickle(book_id_to_name, "data_dictionaries/book_id_to_name.pkl")
+        save_pickle(book_id_to_author, "data_dictionaries/book_id_to_author.pkl")
+        save_pickle(book_id_to_wikipedia_url, "data_dictionaries/book_id_to_wikipedia_url.pkl")
+        save_pickle(book_id_to_lccn, "data_dictionaries/book_id_to_lccn.pkl")
+        save_pickle(book_id_to_year, "data_dictionaries/book_id_to_year.pkl")
         print(f"Saved last progress ({processed_count} books).")
 
 
