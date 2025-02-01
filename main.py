@@ -1,0 +1,171 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import savgol_filter
+from scipy.stats import f_oneway, ttest_ind
+
+from utils import load_pickle
+
+
+def plot_year_distribution(book_id_to_year, bin_width=10):
+    # Aggregate counts by bin_width (e.g., decades)
+    year_to_count = {}
+    for book_id, year in book_id_to_year.items():
+        if year is not None:
+            binned_year = (year // bin_width) * bin_width
+            year_to_count[binned_year] = year_to_count.get(binned_year, 0) + 1
+
+    # Sort the years
+    sorted_years = sorted(year_to_count.keys())
+    counts = [year_to_count[year] for year in sorted_years]
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+    plt.bar(sorted_years, counts, width=bin_width * 0.8, color='skyblue', edgecolor='black')
+    plt.title('Distribution of Book Publications by Year', fontsize=16)
+    plt.xlabel('Publication Year', fontsize=14)
+    plt.ylabel('Number of Books Published', fontsize=14)
+    plt.xticks(sorted_years[::max(1, len(sorted_years) // 20)], rotation=45)  # Space out x-axis labels
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_polarity_distribution(book_id_to_year, book_id_to_polarity, smooth=False, window_size=21, polyorder=2):
+    # Aggregate polarities by year
+    year_to_polarities = {}
+    for book_id, year in book_id_to_year.items():
+        if year in year_to_polarities:
+            year_to_polarities[year].append(book_id_to_polarity[book_id])
+        else:
+            year_to_polarities[year] = [book_id_to_polarity[book_id]]
+
+    # Calculate average polarity for each year
+    sorted_years = sorted(year_to_polarities.keys())
+    average_polarities = [np.mean(year_to_polarities[year]) for year in sorted_years]
+
+    # Apply smoothing if enabled
+    if smooth:
+        smoothed_polarities = savgol_filter(average_polarities, window_length=window_size, polyorder=polyorder)
+    else:
+        smoothed_polarities = average_polarities
+
+    # Create the plot
+    plt.figure(figsize=(12, 6))
+    plt.plot(sorted_years, smoothed_polarities, color='skyblue', linewidth=2)
+    plt.title(f'Polarity Distribution by Year (Smoothed with window_length={window_size})' if smooth else 'Polarity Distribution by Year', fontsize=16)
+    plt.xlabel('Publication Year', fontsize=14)
+    plt.ylabel('Average Polarity', fontsize=14)
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_sentiment_distribution(polarity_lists, ylim=None):
+    # Create the box plot
+    fig, ax = plt.subplots(figsize=(8, 6))
+    box = ax.boxplot(list(polarity_lists.values()), patch_artist=True, tick_labels=[f"{period}\n(n={len(values)})" for period, values in polarity_lists.items()])
+
+    # Assign colors to each time period
+    colors = {
+        "Pre-War": "#AAD2EC",  # Calm and stable
+        "War": "#F69C9E",      # Intensity and conflict
+        "Post-War": "#97E3C2"  # Renewal and hope
+    }
+    box_colors = [colors[period] for period in polarity_lists]
+    for patch, color in zip(box['boxes'], box_colors):
+        patch.set_facecolor(color)
+
+    # Customize median line
+    for median in box['medians']:
+        median.set_color('black')  # Set color to black
+        median.set_linewidth(2)    # Set line thickness
+
+    # Customize y-axis
+    ax.set_title("Sentiment by Time Period", fontsize=16)
+    ax.set_ylabel("Weighted-Average Polarity", fontsize=14)
+    ax.set_xlabel("Time Period", fontsize=14)
+
+    if ylim:
+        ax.yaxis.set_major_locator(plt.MultipleLocator(0.02))
+        plt.ylim(ylim)
+    else:
+        ax.yaxis.set_major_locator(plt.MultipleLocator(0.05))
+
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+
+
+def main():
+    book_id_to_year = {book_id: year for book_id, year in load_pickle('book_id_to_year.pkl').items() if year is not None and abs(year - 1914) <= 2025 - 1914}
+    plot_year_distribution(book_id_to_year)
+    book_id_to_polarity = load_pickle('book_id_to_polarity.pkl')
+
+    # Plot polarity distribution
+    plot_polarity_distribution(book_id_to_year, book_id_to_polarity)
+    plot_polarity_distribution(book_id_to_year, book_id_to_polarity, smooth=True)
+
+    # Define time periods and their centers
+    time_periods = {
+        "Pre-War": (lambda year: year < 1914, 1913),
+        "War": (lambda year: 1914 <= year <= 1918, 1916),
+        "Post-War": (lambda year: year > 1918, 1919)
+    }
+
+    # Group polarities and calculate weighted averages
+    grouped_polarities = {period: [] for period in time_periods}
+
+    for book_id, year in book_id_to_year.items():
+        polarity = book_id_to_polarity[book_id]
+        for period, (condition, center_year) in time_periods.items():
+            if condition(year):
+                weight = 1 / (1 + abs(year - center_year))  # calculate weights based on proximity to the center year (inverse of distance)
+                grouped_polarities[period].append((polarity, weight))
+
+    # Check group sizes and variances
+    for period, polarities_weights in grouped_polarities.items():
+        polarities = [p for p, _ in polarities_weights]
+        variance = np.var(polarities)
+        print(f"{period}: {len(polarities)} books, variance: {variance}")
+
+    # Calculate weighted averages for each period
+    weighted_averages = {}
+    for period, polarities_weights in grouped_polarities.items():
+        total_weighted_polarity = sum(p * w for p, w in polarities_weights)
+        total_weight = sum(w for _, w in polarities_weights)
+        weighted_averages[period] = total_weighted_polarity / total_weight
+
+    print(f"\nWeighted Averages by Period: {weighted_averages}")
+
+    # Extract polarity lists for statistical testing
+    polarity_lists = {
+        period: [p for p, _ in polarities_weights]
+        for period, polarities_weights in grouped_polarities.items()
+    }
+
+    # Perform ANOVA
+    anova_result = f_oneway(*[pol for pol in polarity_lists.values() if pol])
+    print("\nANOVA result:", anova_result)
+
+    # Perform pairwise t-tests with multiple comparisons correction
+    pre_war = polarity_lists["Pre-War"]
+    war = polarity_lists["War"]
+    post_war = polarity_lists["Post-War"]
+
+    p_values = []
+
+    t_test_pre_war_vs_war = ttest_ind(pre_war, war, equal_var=False)
+    p_values.append(t_test_pre_war_vs_war.pvalue)
+
+    t_test_war_vs_post_war = ttest_ind(war, post_war, equal_var=False)
+    p_values.append(t_test_war_vs_post_war.pvalue)
+
+    print("T-Test Pre-War vs War:", t_test_pre_war_vs_war)
+    print("T-Test War vs Post-War:", t_test_war_vs_post_war)
+
+    # Visualize sentiment distributions
+    plot_sentiment_distribution(polarity_lists)
+    plot_sentiment_distribution(polarity_lists, ylim=(-0.05, 0.23))
+
+
+if __name__ == '__main__':
+    main()

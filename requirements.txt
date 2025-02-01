@@ -1,0 +1,7 @@
+matplotlib
+mwparserfromhell
+python-dotenv
+requests
+scipy
+selenium
+webdriver_manager
