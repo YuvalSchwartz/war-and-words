@@ -23,6 +23,12 @@ from utils import load_pickle, save_pickle
 
 # Data source: https://www.gutenberg.org/cache/epub/feeds/
 def get_or_generate_book_id_to_type():
+    """
+    Loads or generates a dictionary mapping Gutenberg book IDs to their types (Text/Dataset/StillImage/MovingImage/Sound/etc.).
+
+    Returns:
+        dict: Dictionary with book ID as key and type as value.
+    """
     if os.path.exists("data_dictionaries/book_id_to_type.pkl"):
         book_id_to_type = load_pickle("data_dictionaries/book_id_to_type.pkl")
     else:
@@ -44,6 +50,12 @@ def get_or_generate_book_id_to_type():
 
 # Data source: https://www.gutenberg.org/cache/epub/feeds/
 def get_or_generate_book_id_to_language():
+    """
+    Loads or generates a dictionary mapping Gutenberg book IDs to their languages (en/la/es/de/etc.).
+
+    Returns:
+        dict: Dictionary with book ID as key and language as value.
+    """
     if os.path.exists("data_dictionaries/book_id_to_language.pkl"):
         book_id_to_language = load_pickle("data_dictionaries/book_id_to_language.pkl")
     else:
@@ -64,46 +76,90 @@ def get_or_generate_book_id_to_language():
 
 
 def get_or_generate_book_id_to_name():
+    """
+    Loads or generates a dictionary mapping Gutenberg book IDs to their names.
+
+    Returns:
+        dict: Dictionary with book ID as key and name as value.
+    """
     if os.path.exists("data_dictionaries/book_id_to_name.pkl"):
         book_id_to_name = load_pickle("data_dictionaries/book_id_to_name.pkl")
     else:
         book_id_to_name = {}
+
     return book_id_to_name
 
 
 def get_or_generate_book_id_to_author():
+    """
+    Loads or generates a dictionary mapping Gutenberg book IDs to their authors.
+
+    Returns:
+        dict: Dictionary with book ID as key and author as value.
+    """
     if os.path.exists("data_dictionaries/book_id_to_author.pkl"):
         book_id_to_author = load_pickle("data_dictionaries/book_id_to_author.pkl")
     else:
         book_id_to_author = {}
+
     return book_id_to_author
 
 
 def get_or_generate_book_id_to_wikipedia_url():
+    """
+    Loads or generates a dictionary mapping Gutenberg book IDs to their Wikipedia URLs.
+
+    Returns:
+        dict: Dictionary with book ID as key and Wikipedia URL as value.
+    """
     if os.path.exists("data_dictionaries/book_id_to_wikipedia_url.pkl"):
         book_id_to_wikipedia_url = load_pickle("data_dictionaries/book_id_to_wikipedia_url.pkl")
     else:
         book_id_to_wikipedia_url = {}
+
     return book_id_to_wikipedia_url
 
 
 def get_or_generate_book_id_to_lccn():
+    """
+    Loads or generates a dictionary mapping Gutenberg book IDs to their Library of Congress Control Numbers (LCCNs).
+
+    Returns:
+        dict: Dictionary with book ID as key and LCCN as value.
+    """
     if os.path.exists("data_dictionaries/book_id_to_lccn.pkl"):
         book_id_to_lccn = load_pickle("data_dictionaries/book_id_to_lccn.pkl")
     else:
         book_id_to_lccn = {}
+
     return book_id_to_lccn
 
 
 def get_or_generate_book_id_to_year():
+    """
+    Loads or generates a dictionary mapping Gutenberg book IDs to their publication years.
+
+    Returns:
+        dict: Dictionary with book ID as key and year as value.
+    """
     if os.path.exists("data_dictionaries/book_id_to_year.pkl"):
         book_id_to_year = load_pickle("data_dictionaries/book_id_to_year.pkl")
     else:
         book_id_to_year = {}
+
     return book_id_to_year
 
 
-def get_gutenberg_book_details(book_id):
+def get_gutenberg_book_metadata(book_id):
+    """
+    Retrieves book details from the Gutenberg website using Selenium.
+
+    Args:
+        book_id (int): The Gutenberg book ID.
+
+    Returns:
+        tuple: Book name, author, Wikipedia URL, LCCN, and publication year.
+    """
     options = Options()
     options.add_argument('--headless=new')
     options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
@@ -118,21 +174,30 @@ def get_gutenberg_book_details(book_id):
     book_lccn = None
     book_year = None
     try:
+        # Navigate to the Gutenberg book page
         driver.get(f'https://www.gutenberg.org/ebooks/{book_id}')
 
+        # Wait for content to load and extract book title
         content_div = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, "content")))
         title_div = content_div.find_element(By.TAG_NAME, 'h1')
         title = title_div.text
         splitted_title = title.split('by')
         name = splitted_title[0].rstrip()
+
         if name != 'No title':
             book_name = name
+
+            # Extract book author if available
             if len(splitted_title) > 1:
                 author = splitted_title[1].lstrip()
                 if author != 'Anonymous' and author != 'Various' and author != 'Unknown':
                     book_author = author
+
+            # Locate bibliographic record section
             bibrec = content_div.find_element(By.ID, 'bibrec')
             trs = bibrec.find_elements(By.TAG_NAME, 'tr')
+
+            # Extract metadata fields from table rows
             for tr in trs:
                 try:
                     th = tr.find_element(By.TAG_NAME, 'th')
@@ -153,6 +218,8 @@ def get_gutenberg_book_details(book_id):
                         year_search = re.search(r'\b[12]\d{3}\b', td_text)
                         if year_search:
                             book_year = int(year_search.group())
+
+                    # Exit early if all data points are found
                     if book_wikipedia_url and book_lccn and book_year:
                         break
                 except NoSuchElementException:
@@ -283,13 +350,30 @@ def get_year_from_wikipedia(wikipedia_url):
 
 
 def process_book(book_id, book_id_to_type, book_id_to_language, book_id_to_name, book_id_to_author, book_id_to_wikipedia_url, book_id_to_lccn, book_id_to_year, lock):
+    """
+    Processes a single book by retrieving metadata and updating dictionaries.
+
+    Args:
+        book_id (int): The book's Gutenberg ID.
+        book_id_to_type (dict): Dictionary mapping book IDs to types.
+        book_id_to_language (dict): Dictionary mapping book IDs to languages.
+        book_id_to_name (dict): Dictionary mapping book IDs to names.
+        book_id_to_author (dict): Dictionary mapping book IDs to authors.
+        book_id_to_wikipedia_url (dict): Dictionary mapping book IDs to Wikipedia URLs.
+        book_id_to_lccn (dict): Dictionary mapping book IDs to LCCNs.
+        book_id_to_year (dict): Dictionary mapping book IDs to years.
+        lock (Lock): A threading lock to prevent data corruption.
+
+    Returns:
+        int or None: The book ID if processed successfully, or None if skipped.
+    """
     if book_id_to_type[book_id] != 'Text' or book_id_to_language[book_id] != 'en':
         return None  # Skip non-text or non-English books
 
     try:
         # Fetch name and author if not already present
         if book_id not in book_id_to_name or book_id not in book_id_to_author or book_id not in book_id_to_wikipedia_url or book_id not in book_id_to_lccn or book_id not in book_id_to_year:
-            book_name, book_author, book_wikipedia_url, book_lccn, book_year = get_gutenberg_book_details(book_id)
+            book_name, book_author, book_wikipedia_url, book_lccn, book_year = get_gutenberg_book_metadata(book_id)
             with lock:
                 book_id_to_name[book_id] = book_name
                 book_id_to_author[book_id] = book_author
@@ -297,8 +381,6 @@ def process_book(book_id, book_id_to_type, book_id_to_language, book_id_to_name,
                 book_id_to_lccn[book_id] = book_lccn
                 book_id_to_year[book_id] = book_year
         else:
-            # book_name = book_id_to_name[book_id]
-            # book_author = book_id_to_author[book_id]
             book_wikipedia_url = book_id_to_wikipedia_url[book_id]
             book_lccn = book_id_to_lccn[book_id]
             book_year = book_id_to_year[book_id]
@@ -320,6 +402,9 @@ def process_book(book_id, book_id_to_type, book_id_to_language, book_id_to_name,
 
 
 def main():
+    """
+    Main function to process Gutenberg book metadata using multithreading.
+    """
     # Load existing dictionaries
     book_id_to_type = get_or_generate_book_id_to_type()
     book_id_to_language = get_or_generate_book_id_to_language()
@@ -333,7 +418,6 @@ def main():
     processed_count = 0  # Counter for saving progress
 
     # Multithreading
-    # with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = []
         for book_id in book_id_to_language:

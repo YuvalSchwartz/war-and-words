@@ -9,6 +9,15 @@ from utils import load_pickle, save_pickle
 
 
 def preprocess_book(book_text):
+    """
+    Preprocess the book text by removing the Project Gutenberg header and footer.
+
+    Args:
+        book_text (str): Original text of the book.
+
+    Returns:
+        str: Preprocessed book text.
+    """
     # Regular expression to match the start of the book
     starting_pattern = r'(?s)\*\*\*\s?START OF TH(IS|E) PROJECT GUTENBERG EBOOK.*?\*\*\*'
     # Find the book starting match
@@ -41,23 +50,43 @@ def preprocess_book(book_text):
 
 
 def get_polarity(book_id):
+    """
+    Get the sentiment polarity of a book.
+
+    Args:
+        book_id (int): Gutenberg book ID.
+
+    Returns:
+        float: Sentiment polarity of the book.
+    """
     with open(f'books/{book_id}.txt', 'r', encoding='utf-8') as f:
         book_text = f.read()
     book_text = preprocess_book(book_text)
     blob = TextBlob(book_text)
     polarity = blob.sentiment.polarity
+
     return polarity
 
 
 def get_or_generate_book_id_to_polarity():
+    """
+    Get or generate the dictionary mapping Gutenberg book IDs to sentiment polarities.
+
+    Returns:
+        dict: Dictionary mapping Gutenberg book IDs to sentiment polarities.
+    """
     if os.path.exists("data_dictionaries/book_id_to_polarity.pkl"):
         book_id_to_polarity = load_pickle("data_dictionaries/book_id_to_polarity.pkl")
     else:
         book_id_to_polarity = {}
+
     return book_id_to_polarity
 
 
 def main():
+    """
+    Main function to generate sentiment polarities for books.
+    """
     book_id_to_polarity = get_or_generate_book_id_to_polarity()
     book_id_to_year = load_pickle('data_dictionaries/book_id_to_year.pkl')
     relevant_book_ids = [book_id for book_id, year in book_id_to_year.items() if year is not None and book_id not in book_id_to_polarity]

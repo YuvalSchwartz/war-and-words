@@ -1,3 +1,5 @@
+import csv
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import savgol_filter
@@ -6,7 +8,41 @@ from scipy.stats import f_oneway, ttest_ind
 from utils import load_pickle
 
 
+def generate_dataset_csv():
+    """
+    Generate a CSV file containing Gutenberg book ids along with their metadata and publication years.
+    """
+    book_id_to_name = load_pickle('data_dictionaries/book_id_to_name.pkl')
+    book_id_to_author = load_pickle('data_dictionaries/book_id_to_author.pkl')
+    book_id_to_lccn = load_pickle('data_dictionaries/book_id_to_lccn.pkl')
+    book_id_to_wikipedia_url = load_pickle('data_dictionaries/book_id_to_wikipedia_url.pkl')
+    book_id_to_year = load_pickle('data_dictionaries/book_id_to_year.pkl')
+
+    with open('gutenberg_publication_years.csv', 'w', encoding='utf-8', newline='') as f:
+        writer = csv.writer(f, quotechar='"', quoting=csv.QUOTE_ALL)
+
+        # Write the header
+        writer.writerow(['gutenberg_id', 'title', 'author', 'lccn', 'wikipedia_url', 'publication_year'])
+
+        # Write the data rows
+        for id, year in book_id_to_year.items():
+            if year is not None:
+                name = book_id_to_name.get(id, '') or ''
+                author = book_id_to_author.get(id, '') or ''
+                lccn = book_id_to_lccn.get(id, '') or ''
+                wikipedia_url = book_id_to_wikipedia_url.get(id, '') or ''
+
+                writer.writerow([id, name, author, lccn, wikipedia_url, year])
+
+
 def plot_year_distribution(book_id_to_year, bin_width=10):
+    """
+    Plot the distribution of book publications by year (aggregated by bin_width).
+
+    Args:
+        book_id_to_year (dict): Dictionary mapping Gutenberg book IDs to publication years.
+        bin_width (int): Width of the bins for aggregating publication counts.
+    """
     # Aggregate counts by bin_width (e.g., decades)
     year_to_count = {}
     for book_id, year in book_id_to_year.items():
@@ -31,6 +67,16 @@ def plot_year_distribution(book_id_to_year, bin_width=10):
 
 
 def plot_polarity_distribution(book_id_to_year, book_id_to_polarity, smooth=False, window_size=21, polyorder=2):
+    """
+    Plot the distribution of book polarities by year (optionally smoothed with Savitzky-Golay filter).
+
+    Args:
+        book_id_to_year (dict): Dictionary mapping Gutenberg book IDs to publication years.
+        book_id_to_polarity (dict): Dictionary mapping Gutenberg book IDs to polarity scores.
+        smooth (bool): Whether to apply smoothing with Savitzky-Golay filter.
+        window_size (int): Window size for smoothing.
+        polyorder (int): Polynomial order for smoothing.
+    """
     # Aggregate polarities by year
     year_to_polarities = {}
     for book_id, year in book_id_to_year.items():
@@ -61,6 +107,13 @@ def plot_polarity_distribution(book_id_to_year, book_id_to_polarity, smooth=Fals
 
 
 def plot_sentiment_distribution(polarity_lists, ylim=None):
+    """
+    Plot the distribution of sentiment scores by time period.
+
+    Args:
+        polarity_lists (dict): Dictionary mapping time periods to lists of polarity scores.
+        ylim (tuple): Tuple specifying the y-axis limits (in order to generate a zoomed-in plot).
+    """
     # Create the box plot
     fig, ax = plt.subplots(figsize=(8, 6))
     box = ax.boxplot(list(polarity_lists.values()), patch_artist=True, tick_labels=[f"{period}\n(n={len(values)})" for period, values in polarity_lists.items()])
@@ -96,6 +149,9 @@ def plot_sentiment_distribution(polarity_lists, ylim=None):
 
 
 def main():
+    """
+    Main function for analyzing the sentiment of books published around World War I (including statistical tests).
+    """
     book_id_to_year = {book_id: year for book_id, year in load_pickle('data_dictionaries/book_id_to_year.pkl').items() if year is not None and abs(year - 1914) <= 2025 - 1914}
     plot_year_distribution(book_id_to_year)
     book_id_to_polarity = load_pickle('data_dictionaries/book_id_to_polarity.pkl')
@@ -168,4 +224,5 @@ def main():
 
 
 if __name__ == '__main__':
+    # generate_dataset_csv()
     main()
