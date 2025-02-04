@@ -56,13 +56,14 @@ def plot_year_distribution(book_id_to_year, bin_width=10):
 
     # Create the plot
     plt.figure(figsize=(10, 6))
-    plt.bar(sorted_years, counts, width=bin_width * 0.8, color='skyblue', edgecolor='black')
+    plt.bar(sorted_years, counts, width=bin_width * 0.8, color='skyblue', edgecolor='black', zorder=3)
     plt.title('Distribution of Book Publications by Year', fontsize=16)
     plt.xlabel('Publication Year', fontsize=14)
     plt.ylabel('Number of Books Published', fontsize=14)
     plt.xticks(sorted_years[::max(1, len(sorted_years) // 20)], rotation=45)  # Space out x-axis labels
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.grid(axis='y', linestyle='--', alpha=0.7, zorder=0)
     plt.tight_layout()
+    plt.savefig('figures/year_distribution.png')
     plt.show()
 
 
@@ -97,12 +98,13 @@ def plot_polarity_distribution(book_id_to_year, book_id_to_polarity, smooth=Fals
 
     # Create the plot
     plt.figure(figsize=(12, 6))
-    plt.plot(sorted_years, smoothed_polarities, color='skyblue', linewidth=2)
+    plt.plot(sorted_years, smoothed_polarities, color='skyblue', linewidth=2, zorder=3)
     plt.title(f'Polarity Distribution by Year (Smoothed with window_length={window_size})' if smooth else 'Polarity Distribution by Year', fontsize=16)
     plt.xlabel('Publication Year', fontsize=14)
     plt.ylabel('Average Polarity', fontsize=14)
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.grid(axis='y', linestyle='--', alpha=0.7, zorder=0)
     plt.tight_layout()
+    plt.savefig('figures/polarity_distribution.png' if smooth is False else 'figures/polarity_distribution_smoothed.png')
     plt.show()
 
 
@@ -144,7 +146,8 @@ def plot_sentiment_distribution(polarity_lists, ylim=None):
     else:
         ax.yaxis.set_major_locator(plt.MultipleLocator(0.05))
 
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.grid(axis='y', linestyle='--', alpha=0.7, zorder=0)
+    fig.savefig('figures/sentiment_distribution.png' if ylim is None else 'figures/sentiment_distribution_zoomed.png')
     plt.show()
 
 
