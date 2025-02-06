@@ -57,10 +57,11 @@ def plot_year_distribution(book_id_to_year, bin_width=10):
     # Create the plot
     plt.figure(figsize=(10, 6))
     plt.bar(sorted_years, counts, width=bin_width * 0.8, color='skyblue', edgecolor='black', zorder=3)
-    plt.title('Distribution of Book Publications by Year', fontsize=16)
-    plt.xlabel('Publication Year', fontsize=14)
-    plt.ylabel('Number of Books Published', fontsize=14)
-    plt.xticks(sorted_years[::max(1, len(sorted_years) // 20)], rotation=45)  # Space out x-axis labels
+    # plt.title('Distribution of Book Publications by Year', fontsize=16)
+    plt.xlabel('Publication Year', fontsize=17)
+    plt.ylabel('Number of Books Published', fontsize=17)
+    plt.xticks(sorted_years[::max(1, len(sorted_years) // 20)], rotation=45, fontsize=14)  # Space out x-axis labels
+    plt.yticks(fontsize=14)
     plt.grid(axis='y', linestyle='--', alpha=0.7, zorder=0)
     plt.tight_layout()
     plt.savefig('figures/year_distribution.png')
@@ -98,10 +99,12 @@ def plot_polarity_distribution(book_id_to_year, book_id_to_polarity, smooth=Fals
 
     # Create the plot
     plt.figure(figsize=(12, 6))
-    plt.plot(sorted_years, smoothed_polarities, color='skyblue', linewidth=2, zorder=3)
-    plt.title(f'Polarity Distribution by Year (Smoothed with window_length={window_size})' if smooth else 'Polarity Distribution by Year', fontsize=16)
-    plt.xlabel('Publication Year', fontsize=14)
-    plt.ylabel('Average Polarity', fontsize=14)
+    plt.plot(sorted_years, smoothed_polarities, color='skyblue', linewidth=3, zorder=3)
+    # plt.title(f'Polarity Distribution by Year (Smoothed with window_length={window_size})' if smooth else 'Polarity Distribution by Year', fontsize=16)
+    plt.xlabel('Publication Year', fontsize=21)
+    plt.ylabel('Average Polarity', fontsize=21)
+    plt.xticks(sorted_years[::max(1, len(sorted_years) // 20)], rotation=45, fontsize=18)  # Space out x-axis labels
+    plt.yticks(fontsize=18)
     plt.grid(axis='y', linestyle='--', alpha=0.7, zorder=0)
     plt.tight_layout()
     plt.savefig('figures/polarity_distribution.png' if smooth is False else 'figures/polarity_distribution_smoothed.png')
@@ -117,8 +120,10 @@ def plot_sentiment_distribution(polarity_lists, ylim=None):
         ylim (tuple): Tuple specifying the y-axis limits (in order to generate a zoomed-in plot).
     """
     # Create the box plot
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(8, 7))
     box = ax.boxplot(list(polarity_lists.values()), patch_artist=True, tick_labels=[f"{period}\n(n={len(values)})" for period, values in polarity_lists.items()])
+    plt.xticks(fontsize=13.5)
+    plt.yticks(fontsize=13.5)
 
     # Assign colors to each time period
     colors = {
@@ -136,7 +141,7 @@ def plot_sentiment_distribution(polarity_lists, ylim=None):
         median.set_linewidth(2)    # Set line thickness
 
     # Customize y-axis
-    ax.set_title("Sentiment by Time Period", fontsize=16)
+    # ax.set_title("Sentiment by Time Period", fontsize=16)
     ax.set_ylabel("Weighted-Average Polarity", fontsize=14)
     ax.set_xlabel("Time Period", fontsize=14)
 
@@ -151,6 +156,49 @@ def plot_sentiment_distribution(polarity_lists, ylim=None):
     plt.show()
 
 
+def plot_sentiment_heatmap(book_id_to_year, book_id_to_polarity):
+    # Aggregate sentiment polarity by decade
+    decade_to_polarities = {}
+    for book_id, year in book_id_to_year.items():
+        if year is not None:
+            decade = (year // 10) * 10  # Group by decades
+            if decade in decade_to_polarities:
+                decade_to_polarities[decade].append(book_id_to_polarity[book_id])
+            else:
+                decade_to_polarities[decade] = [book_id_to_polarity[book_id]]
+
+    # Calculate average polarity for each decade
+    sorted_decades = sorted(decade_to_polarities.keys())
+    average_polarities = [np.mean(decade_to_polarities[decade]) for decade in sorted_decades]
+
+    # Create heatmap data
+    heatmap_data = np.array(average_polarities).reshape(1, -1)  # Single row for heatmap
+
+    # Adjust extent to center x-ticks in the middle of each decade
+    decade_width = 10  # Width of each decade
+    adjusted_extent = [
+        sorted_decades[0] - decade_width / 2,
+        sorted_decades[-1] + decade_width / 2,
+        0,
+        1
+    ]
+
+    # Plot heatmap
+    plt.figure(figsize=(12, 3))
+    plt.imshow(heatmap_data, cmap='coolwarm', aspect='auto', extent=adjusted_extent)
+    colorbar = plt.colorbar(label="Average\nSentiment\nPolarity", pad=0.03)
+    colorbar.ax.yaxis.label.set_size(20)  # Set font size for the label
+    colorbar.ax.yaxis.labelpad = 10  # Adjust the label's distance from the colorbar
+    colorbar.ax.tick_params(labelsize=16)  # Set the font size of the tick labels
+    plt.xticks(sorted_decades, rotation=90, fontsize=16)
+    plt.yticks([])  # Remove y-axis ticks since it's a single row
+    # plt.title("Sentiment Polarity by Decade", fontsize=14)
+    plt.xlabel("Decade", fontsize=20)
+    plt.tight_layout()
+    plt.savefig('figures/sentiment_decade_heatmap.png')
+    plt.show()
+
+
 def main():
     """
     Main function for analyzing the sentiment of books published around World War I (including statistical tests).
@@ -162,6 +210,9 @@ def main():
     # Plot polarity distribution
     plot_polarity_distribution(book_id_to_year, book_id_to_polarity)
     plot_polarity_distribution(book_id_to_year, book_id_to_polarity, smooth=True)
+
+    # Plot sentiment heatmap
+    plot_sentiment_heatmap(book_id_to_year, book_id_to_polarity)
 
     # Define time periods and their centers
     time_periods = {
